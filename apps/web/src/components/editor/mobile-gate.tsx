@@ -1,12 +1,10 @@
 "use client";
 
 // Vizzy fork: OpenCut's MobileGate uses `window.innerWidth < 1024` to
-// detect mobile/iPad and prompt the user to come back on desktop. Inside
-// Vizzy's Advanced Mode iframe the measurement is unreliable — during
-// the iframe's initial mount the inner window can briefly report a
-// narrower width than the visible overlay, and the gate never re-runs.
-// Since we only mount this bundle from a desktop host, replace the gate
-// with a no-op passthrough.
+// prompt mobile/iPad users to come back on desktop. Vizzy now ships a
+// dedicated mobile/tablet editor shell (see src/mobile/) that's chosen
+// by useViewport() in editor-shell.tsx, so we never want the gate to
+// block the editor. Keep as a passthrough.
 
 interface MobileGateProps {
 	children: React.ReactNode;

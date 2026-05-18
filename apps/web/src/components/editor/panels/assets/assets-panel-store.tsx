@@ -88,6 +88,12 @@ interface AssetsPanelStore {
 	requestRevealMedia: (mediaId: string) => void;
 	clearHighlight: () => void;
 
+	/* Vizzy mobile shell — bottom-drawer visibility for the active tab.
+	   Desktop renders the views inline and ignores this flag. */
+	mobileDrawerOpen: boolean;
+	openMobileDrawer: (tab?: Tab) => void;
+	closeMobileDrawer: () => void;
+
 	/* Media */
 	mediaViewMode: MediaViewMode;
 	setMediaViewMode: (mode: MediaViewMode) => void;
@@ -105,6 +111,13 @@ export const useAssetsPanelStore = create<AssetsPanelStore>()(
 			requestRevealMedia: (mediaId) =>
 				set({ activeTab: "media", highlightMediaId: mediaId }),
 			clearHighlight: () => set({ highlightMediaId: null }),
+			mobileDrawerOpen: false,
+			openMobileDrawer: (tab) =>
+				set((state) => ({
+					mobileDrawerOpen: true,
+					activeTab: tab ?? state.activeTab,
+				})),
+			closeMobileDrawer: () => set({ mobileDrawerOpen: false }),
 			mediaViewMode: "grid",
 			setMediaViewMode: (mode) => set({ mediaViewMode: mode }),
 			mediaSortBy: "name",

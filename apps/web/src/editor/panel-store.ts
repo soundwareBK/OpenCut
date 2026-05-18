@@ -8,6 +8,8 @@ export interface PanelSizes {
 	properties: number;
 	mainContent: number;
 	timeline: number;
+	// Vizzy mobile shell — preview share of the vertical stack (%).
+	mobileSplit: number;
 }
 
 export type PanelId = keyof PanelSizes;
@@ -41,7 +43,7 @@ export const usePanelStore = create<PanelState>()(
 		}),
 		{
 			name: "panel-sizes",
-			version: 2,
+			version: 3,
 			migrate: (persistedState) => {
 				const state = persistedState as
 					| {
@@ -54,6 +56,7 @@ export const usePanelStore = create<PanelState>()(
 							tools?: number;
 							preview?: number;
 							properties?: number;
+							mobileSplit?: number;
 					  }
 					| undefined
 					| null;
@@ -82,6 +85,7 @@ export const usePanelStore = create<PanelState>()(
 							PANEL_CONFIG.panels.properties,
 						mainContent: state.mainContent ?? PANEL_CONFIG.panels.mainContent,
 						timeline: state.timeline ?? PANEL_CONFIG.panels.timeline,
+						mobileSplit: state.mobileSplit ?? PANEL_CONFIG.panels.mobileSplit,
 					},
 				};
 			},

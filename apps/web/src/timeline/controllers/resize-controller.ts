@@ -1,4 +1,4 @@
-import type { MouseEvent as ReactMouseEvent } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import { BASE_TIMELINE_PIXELS_PER_SECOND } from "@/timeline/scale";
 import {
 	addMediaTime,
@@ -167,8 +167,8 @@ export class ResizeController {
 	constructor(deps: { configRef: ResizeConfigRef }) {
 		this.configRef = deps.configRef;
 		this.onResizeStart = this.onResizeStart.bind(this);
-		this.handleMouseMove = this.handleMouseMove.bind(this);
-		this.handleMouseUp = this.handleMouseUp.bind(this);
+		this.handlePointerMove = this.handlePointerMove.bind(this);
+		this.handlePointerUp = this.handlePointerUp.bind(this);
 	}
 
 	private get config(): ResizeConfig {
@@ -200,7 +200,7 @@ export class ResizeController {
 		track,
 		side,
 	}: {
-		event: ReactMouseEvent;
+		event: ReactPointerEvent;
 		element: TimelineElement;
 		track: TimelineTrack;
 		side: ResizeSide;
@@ -243,13 +243,15 @@ export class ResizeController {
 	}
 
 	private activate(): void {
-		document.addEventListener("mousemove", this.handleMouseMove);
-		document.addEventListener("mouseup", this.handleMouseUp);
+		document.addEventListener("pointermove", this.handlePointerMove);
+		document.addEventListener("pointerup", this.handlePointerUp);
+		document.addEventListener("pointercancel", this.handlePointerUp);
 	}
 
 	private deactivate(): void {
-		document.removeEventListener("mousemove", this.handleMouseMove);
-		document.removeEventListener("mouseup", this.handleMouseUp);
+		document.removeEventListener("pointermove", this.handlePointerMove);
+		document.removeEventListener("pointerup", this.handlePointerUp);
+		document.removeEventListener("pointercancel", this.handlePointerUp);
 	}
 
 	private notify(): void {
@@ -322,7 +324,7 @@ export class ResizeController {
 		return deltaTime;
 	}
 
-	private handleMouseMove({ clientX }: MouseEvent): void {
+	private handlePointerMove({ clientX }: PointerEvent): void {
 		if (this.session.kind !== "active") return;
 		const session = this.session;
 
@@ -345,7 +347,7 @@ export class ResizeController {
 		this.config.previewElements(result.updates);
 	}
 
-	private handleMouseUp(): void {
+	private handlePointerUp(): void {
 		if (this.session.kind !== "active") return;
 		const session = this.session;
 

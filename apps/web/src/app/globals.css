@@ -289,3 +289,24 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ============================================================================
+ * Vizzy mobile shell — touch device baseline.
+ *
+ * iOS Safari zooms the page when an <input> gets focus and its computed
+ * font-size is below 16px. Bumping the base on touch devices keeps the
+ * viewport stable while editing properties on a phone.
+ *
+ * Disabling pull-to-refresh on the document so vertical drags inside the
+ * timeline don't accidentally reload the page.
+ * ========================================================================== */
+@media (pointer: coarse) {
+  html, body {
+    overscroll-behavior-y: none;
+  }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

@@ -21,6 +21,7 @@ import {
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { useTimelineZoom } from "@/timeline/hooks/use-timeline-zoom";
+import { usePinchZoom } from "@/timeline/hooks/use-pinch-zoom";
 import {
 	useCallback,
 	useEffect,
@@ -183,6 +184,16 @@ export function Timeline() {
 			tracksScrollRef,
 			rulerScrollRef,
 		});
+
+	// Two-finger pinch on the tracks viewport scales the timeline. Native
+	// listeners (passive: false) so we can preventDefault and stop iOS
+	// Safari's page-zoom from hijacking the gesture.
+	usePinchZoom({
+		containerRef: tracksScrollRef,
+		getZoomLevel: () => zoomLevel,
+		setZoomLevel,
+		minZoom: minZoomLevel,
+	});
 	const { isResizing, handleResizeStart } = useTimelineResize({
 		zoomLevel,
 		onSnapPointChange: handleSnapPointChange,
@@ -300,7 +311,7 @@ export function Timeline() {
 		isReady: tracks.length > 0,
 	});
 
-	const { dragView, handleElementMouseDown, handleElementClick } =
+	const { dragView, handleElementPointerDown, handleElementClick } =
 		useElementInteraction({
 		zoomLevel,
 		tracksContainerRef,
@@ -321,7 +332,7 @@ export function Timeline() {
 		onSnapPointChange: handleSnapPointChange,
 	});
 
-	const { handleRulerMouseDown: handlePlayheadRulerMouseDown } =
+	const { handleRulerPointerDown: handlePlayheadRulerPointerDown } =
 		useTimelinePlayhead({
 			zoomLevel,
 			rulerRef,
@@ -409,9 +420,9 @@ export function Timeline() {
 		(isElementDragging || bookmarkDragState.isDragging || isResizing);
 
 	const {
-		handleTracksMouseDown,
+		handleTracksPointerDown,
 		handleTracksClick,
-		handleRulerMouseDown,
+		handleRulerPointerDown,
 		handleRulerClick,
 	} = useTimelineSeek({
 		playheadRef,
@@ -484,8 +495,8 @@ export function Timeline() {
 								tracksScrollRef={rulerScrollRef}
 								handleWheel={handleWheel}
 								handleTimelineContentClick={handleRulerClick}
-								handleRulerTrackingMouseDown={handleRulerMouseDown}
-								handleRulerMouseDown={handlePlayheadRulerMouseDown}
+								handleRulerTrackingPointerDown={handleRulerPointerDown}
+								handleRulerPointerDown={handlePlayheadRulerPointerDown}
 							/>
 							<TimelineBookmarksRow
 								zoomLevel={zoomLevel}
@@ -494,8 +505,8 @@ export function Timeline() {
 								onBookmarkMouseDown={handleBookmarkMouseDown}
 								handleWheel={handleWheel}
 								handleTimelineContentClick={handleRulerClick}
-								handleRulerTrackingMouseDown={handleRulerMouseDown}
-								handleRulerMouseDown={handlePlayheadRulerMouseDown}
+								handleRulerTrackingPointerDown={handleRulerPointerDown}
+								handleRulerPointerDown={handlePlayheadRulerPointerDown}
 							/>
 						</div>
 					</div>
@@ -529,11 +540,11 @@ export function Timeline() {
 										) + TIMELINE_CONTENT_TOP_PADDING_PX
 									}px`,
 								}}
-								onMouseDown={(event) => {
+								onPointerDown={(event) => {
 									const isDirectTarget = event.target === event.currentTarget;
 									if (!isDirectTarget) return;
 									event.stopPropagation();
-									handleTracksMouseDown(event);
+									handleTracksPointerDown(event);
 									handleSelectionMouseDown(event);
 								}}
 								onClick={(event) => {
@@ -549,11 +560,11 @@ export function Timeline() {
 										zoomLevel={zoomLevel}
 										dragView={dragView}
 										onResizeStart={handleResizeStart}
-										onElementMouseDown={handleElementMouseDown}
+										onElementPointerDown={handleElementPointerDown}
 										onElementClick={handleElementClick}
-										onTrackMouseDown={(event) => {
+										onTrackPointerDown={(event) => {
 											handleSelectionMouseDown(event);
-											handleTracksMouseDown(event);
+											handleTracksPointerDown(event);
 										}}
 										onTrackMouseUp={handleTracksClick}
 										shouldIgnoreClick={shouldIgnoreClick}
@@ -563,8 +574,8 @@ export function Timeline() {
 								)}
 							</div>
 							<TimelineGutter
-								onMouseDown={(event) => {
-									handleTracksMouseDown(event);
+								onPointerDown={(event) => {
+									handleTracksPointerDown(event);
 									handleSelectionMouseDown(event);
 								}}
 								onClick={handleTracksClick}
@@ -725,9 +736,9 @@ function TimelineTrackRows({
 	zoomLevel,
 	dragView,
 	onResizeStart,
-	onElementMouseDown,
+	onElementPointerDown,
 	onElementClick,
-	onTrackMouseDown,
+	onTrackPointerDown,
 	onTrackMouseUp,
 	shouldIgnoreClick,
 	isDragOver,
@@ -739,13 +750,13 @@ function TimelineTrackRows({
 	onResizeStart: React.ComponentProps<
 		typeof TimelineTrackContent
 	>["onResizeStart"];
-	onElementMouseDown: React.ComponentProps<
+	onElementPointerDown: React.ComponentProps<
 		typeof TimelineTrackContent
-	>["onElementMouseDown"];
+	>["onElementPointerDown"];
 	onElementClick: React.ComponentProps<
 		typeof TimelineTrackContent
 	>["onElementClick"];
-	onTrackMouseDown: (event: React.MouseEvent) => void;
+	onTrackPointerDown: (event: React.PointerEvent) => void;
 	onTrackMouseUp: (event: React.MouseEvent) => void;
 	shouldIgnoreClick: () => boolean;
 	isDragOver: boolean;
@@ -822,9 +833,9 @@ function TimelineTrackRows({
 								zoomLevel={zoomLevel}
 								dragView={dragView}
 								onResizeStart={onResizeStart}
-								onElementMouseDown={onElementMouseDown}
+								onElementPointerDown={onElementPointerDown}
 								onElementClick={onElementClick}
-								onTrackMouseDown={onTrackMouseDown}
+								onTrackPointerDown={onTrackPointerDown}
 								onTrackMouseUp={onTrackMouseUp}
 								shouldIgnoreClick={shouldIgnoreClick}
 								targetElementId={
@@ -887,15 +898,15 @@ function TimelineTrackRows({
 }
 
 function TimelineGutter({
-	onMouseDown,
+	onPointerDown,
 	onClick,
 }: {
-	onMouseDown: (event: React.MouseEvent) => void;
+	onPointerDown: (event: React.PointerEvent) => void;
 	onClick: (event: React.MouseEvent) => void;
 }) {
 	return (
 		// eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- spatial gesture surface (empty space below tracks); clicks here clear selection. Keyboard control is global timeline shortcuts.
-		<div className="flex-1" onMouseDown={onMouseDown} onClick={onClick} />
+		<div className="flex-1" onPointerDown={onPointerDown} onClick={onClick} />
 	);
 }
 

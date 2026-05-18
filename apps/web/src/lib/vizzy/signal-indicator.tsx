@@ -10,8 +10,12 @@
  */
 
 import { requestResync, useVizzyBridge, useVizzySignal } from "./bridge";
+import { useViewport } from "@/hooks/use-viewport";
 
 export function VizzySignalIndicator() {
+	// All hooks must run unconditionally on every render — React's Rules of
+	// Hooks. Any early return MUST come after the last hook call below.
+	const { isCompact } = useViewport();
 	const connected = useVizzyBridge((s) => s.connected);
 	const audioName = useVizzyBridge((s) => s.audioMedia?.name);
 	const beatCount = useVizzyBridge((s) => s.beats.length);
@@ -25,6 +29,12 @@ export function VizzySignalIndicator() {
 	const rms = useVizzySignal("rms");
 	const bass = useVizzySignal("bass");
 	const kickPulse = useVizzySignal("kickPulse");
+
+	// Mobile shell anchors a bottom tab bar at the same screen edge this
+	// indicator floats above. Hide it on compact viewports — it's a dev /
+	// diagnostic widget (Phase 2 of the bridge work), the real Signals
+	// panel lives in the assets drawer once Phase 3 ships.
+	if (isCompact) return null;
 
 	if (!connected) {
 		return (

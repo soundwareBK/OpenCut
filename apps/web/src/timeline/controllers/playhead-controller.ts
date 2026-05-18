@@ -1,4 +1,4 @@
-import type { MouseEvent as ReactMouseEvent } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import type { FrameRate } from "opencut-wasm";
 import {
 	mediaTime,
@@ -102,10 +102,10 @@ export class PlayheadController {
 
 	constructor(deps: { configRef: PlayheadConfigRef }) {
 		this.configRef = deps.configRef;
-		this.onPlayheadMouseDown = this.onPlayheadMouseDown.bind(this);
-		this.onRulerMouseDown = this.onRulerMouseDown.bind(this);
-		this.handleMouseMove = this.handleMouseMove.bind(this);
-		this.handleMouseUp = this.handleMouseUp.bind(this);
+		this.onPlayheadPointerDown = this.onPlayheadPointerDown.bind(this);
+		this.onRulerPointerDown = this.onRulerPointerDown.bind(this);
+		this.handlePointerMove = this.handlePointerMove.bind(this);
+		this.handlePointerUp = this.handlePointerUp.bind(this);
 	}
 
 	private get config(): PlayheadConfig {
@@ -126,7 +126,7 @@ export class PlayheadController {
 
 	// --- Public event handlers (bound, stable references) ---
 
-	onPlayheadMouseDown(event: ReactMouseEvent): void {
+	onPlayheadPointerDown(event: ReactPointerEvent): void {
 		event.preventDefault();
 		event.stopPropagation();
 		this.session = {
@@ -140,7 +140,7 @@ export class PlayheadController {
 		this.activate();
 	}
 
-	onRulerMouseDown(event: ReactMouseEvent): void {
+	onRulerPointerDown(event: ReactPointerEvent): void {
 		if (event.button !== 0) return;
 		if (this.config.getPlayheadEl()?.contains(event.target as Node)) return;
 
@@ -215,13 +215,15 @@ export class PlayheadController {
 	// --- Private ---
 
 	private activate(): void {
-		window.addEventListener("mousemove", this.handleMouseMove);
-		window.addEventListener("mouseup", this.handleMouseUp);
+		window.addEventListener("pointermove", this.handlePointerMove);
+		window.addEventListener("pointerup", this.handlePointerUp);
+		window.addEventListener("pointercancel", this.handlePointerUp);
 	}
 
 	private deactivate(): void {
-		window.removeEventListener("mousemove", this.handleMouseMove);
-		window.removeEventListener("mouseup", this.handleMouseUp);
+		window.removeEventListener("pointermove", this.handlePointerMove);
+		window.removeEventListener("pointerup", this.handlePointerUp);
+		window.removeEventListener("pointercancel", this.handlePointerUp);
 	}
 
 	/**
@@ -233,7 +235,7 @@ export class PlayheadController {
 		event,
 		isElementSnappingEnabled,
 	}: {
-		event: MouseEvent | ReactMouseEvent;
+		event: PointerEvent | ReactPointerEvent;
 		isElementSnappingEnabled: boolean;
 	}): void {
 		const ruler = this.config.getRulerEl();
@@ -284,7 +286,7 @@ export class PlayheadController {
 		this.lastMouseClientX = event.clientX;
 	}
 
-	private handleMouseMove(event: MouseEvent): void {
+	private handlePointerMove(event: PointerEvent): void {
 		if (this.session.kind !== "scrubbing") return;
 		this.scrub({ event, isElementSnappingEnabled: true });
 		if (this.session.didStartFromRuler) {
@@ -292,7 +294,7 @@ export class PlayheadController {
 		}
 	}
 
-	private handleMouseUp(event: MouseEvent): void {
+	private handlePointerUp(event: PointerEvent): void {
 		if (this.session.kind !== "scrubbing") return;
 
 		const session = this.session;

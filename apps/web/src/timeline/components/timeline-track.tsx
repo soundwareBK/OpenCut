@@ -12,13 +12,13 @@ interface TimelineTrackContentProps {
 	zoomLevel: number;
 	dragView: ElementDragView;
 	onResizeStart: (params: {
-		event: React.MouseEvent;
+		event: React.PointerEvent;
 		element: TimelineElementType;
 		track: TimelineTrack;
 		side: "left" | "right";
 	}) => void;
-	onElementMouseDown: (params: {
-		event: React.MouseEvent;
+	onElementPointerDown: (params: {
+		event: React.PointerEvent;
 		element: TimelineElementType;
 		track: TimelineTrack;
 	}) => void;
@@ -27,7 +27,7 @@ interface TimelineTrackContentProps {
 		element: TimelineElementType;
 		track: TimelineTrack;
 	}) => void;
-	onTrackMouseDown?: (event: React.MouseEvent) => void;
+	onTrackPointerDown?: (event: React.PointerEvent) => void;
 	onTrackMouseUp?: (event: React.MouseEvent) => void;
 	shouldIgnoreClick?: () => boolean;
 	targetElementId?: string | null;
@@ -38,9 +38,9 @@ export function TimelineTrackContent({
 	zoomLevel,
 	dragView,
 	onResizeStart,
-	onElementMouseDown,
+	onElementPointerDown,
 	onElementClick,
-	onTrackMouseDown,
+	onTrackPointerDown,
 	onTrackMouseUp,
 	shouldIgnoreClick,
 	targetElementId = null,
@@ -57,9 +57,9 @@ export function TimelineTrackContent({
 					if (shouldIgnoreClick?.()) return;
 					onTrackMouseUp?.(event);
 				}}
-				onMouseDown={(event) => {
+				onPointerDown={(event) => {
 					event.preventDefault();
-					onTrackMouseDown?.(event);
+					onTrackPointerDown?.(event);
 				}}
 			/>
 			{/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- spatial gesture surface; the wrapping <button> handles keyboard track selection, this <div> only forwards background clicks for box-select / deselect. */}
@@ -71,10 +71,10 @@ export function TimelineTrackContent({
 					if (shouldIgnoreClick?.()) return;
 					onTrackMouseUp?.(event);
 				}}
-				onMouseDown={(event) => {
+				onPointerDown={(event) => {
 					if (event.target !== event.currentTarget) return;
 					event.preventDefault();
-					onTrackMouseDown?.(event);
+					onTrackPointerDown?.(event);
 				}}
 			>
 				{track.elements.length === 0 ? (
@@ -96,8 +96,8 @@ export function TimelineTrackContent({
 								onResizeStart={({ event, element, side }) =>
 									onResizeStart({ event, element, track, side })
 								}
-								onElementMouseDown={({ event, element }) =>
-									onElementMouseDown({ event, element, track })
+								onElementPointerDown={({ event, element }) =>
+									onElementPointerDown({ event, element, track })
 								}
 								onElementClick={({ event, element }) =>
 									onElementClick({ event, element, track })

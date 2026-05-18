@@ -94,7 +94,7 @@ export function useTimelinePlayhead({
 	useEffect(() => () => ctrl.destroy(), [ctrl]);
 
 	return {
-		handlePlayheadMouseDown: ctrl.onPlayheadMouseDown,
-		handleRulerMouseDown: ctrl.onRulerMouseDown,
+		handlePlayheadPointerDown: ctrl.onPlayheadPointerDown,
+		handleRulerPointerDown: ctrl.onRulerPointerDown,
 	};
 }

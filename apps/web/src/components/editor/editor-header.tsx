@@ -26,18 +26,30 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ShortcutsDialog } from "@/actions/components/shortcuts-dialog";
 import Image from "next/image";
 import { cn } from "@/utils/ui";
+import { useViewport } from "@/hooks/use-viewport";
 
 export function EditorHeader() {
+	// Vizzy mobile shell: on phone widths, Feedback + Theme + the full
+	// Export label crowd out the editable project name. Drop the optional
+	// chrome and keep only the essentials (logo dropdown, name, export).
+	const { size } = useViewport();
+	const isPhone = size === "phone";
+
 	return (
-		<header className="bg-background flex h-[3.4rem] items-center justify-between px-3 pt-0.5">
-			<div className="flex items-center gap-1">
+		<header
+			className={cn(
+				"bg-background flex items-center justify-between pt-0.5",
+				isPhone ? "h-11 px-2" : "h-[3.4rem] px-3",
+			)}
+		>
+			<div className="flex min-w-0 flex-1 items-center gap-1">
 				<ProjectDropdown />
 				<EditableProjectName />
 			</div>
-			<nav className="flex items-center gap-2">
-				<FeedbackPopover />
+			<nav className="flex shrink-0 items-center gap-2">
+				{!isPhone && <FeedbackPopover />}
 				<ExportButton />
-				<ThemeToggle />
+				{!isPhone && <ThemeToggle />}
 			</nav>
 		</header>
 	);

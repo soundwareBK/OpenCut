@@ -208,13 +208,13 @@ interface TimelineElementProps {
 	zoomLevel: number;
 	isSelected: boolean;
 	onResizeStart: (params: {
-		event: React.MouseEvent;
+		event: React.PointerEvent;
 		element: TimelineElementType;
 		track: TimelineTrack;
 		side: "left" | "right";
 	}) => void;
-	onElementMouseDown: (params: {
-		event: React.MouseEvent;
+	onElementPointerDown: (params: {
+		event: React.PointerEvent;
 		element: TimelineElementType;
 	}) => void;
 	onElementClick: (params: {
@@ -231,7 +231,7 @@ export function TimelineElement({
 	zoomLevel,
 	isSelected,
 	onResizeStart,
-	onElementMouseDown,
+	onElementPointerDown,
 	onElementClick,
 	dragView,
 	isDropTarget = false,
@@ -406,7 +406,7 @@ export function TimelineElement({
 							baseTrackHeight={baseTrackHeight}
 							expandedContent={expandedContent}
 							onElementClick={onElementClick}
-							onElementMouseDown={onElementMouseDown}
+							onElementPointerDown={onElementPointerDown}
 							onResizeStart={onResizeStart}
 							isDropTarget={isDropTarget}
 						/>
@@ -531,7 +531,7 @@ function ElementInner({
 	baseTrackHeight,
 	expandedContent,
 	onElementClick,
-	onElementMouseDown,
+	onElementPointerDown,
 	onResizeStart,
 	isDropTarget = false,
 }: {
@@ -546,12 +546,12 @@ function ElementInner({
 		event: React.MouseEvent;
 		element: TimelineElementType;
 	}) => void;
-	onElementMouseDown: (params: {
-		event: React.MouseEvent;
+	onElementPointerDown: (params: {
+		event: React.PointerEvent;
 		element: TimelineElementType;
 	}) => void;
 	onResizeStart: (params: {
-		event: React.MouseEvent;
+		event: React.PointerEvent;
 		element: TimelineElementType;
 		track: TimelineTrack;
 		side: "left" | "right";
@@ -589,9 +589,9 @@ function ElementInner({
 					<button
 						type="button"
 						tabIndex={-1}
-						className="absolute inset-0 size-full flex flex-col"
+						className="absolute inset-0 size-full flex flex-col touch-none"
 						onClick={(event) => onElementClick({ event, element })}
-						onMouseDown={(event) => onElementMouseDown({ event, element })}
+						onPointerDown={(event) => onElementPointerDown({ event, element })}
 					>
 						<div
 							className={cn(
@@ -644,7 +644,7 @@ function ResizeHandle({
 	element: TimelineElementType;
 	track: TimelineTrack;
 	onResizeStart: (params: {
-		event: React.MouseEvent;
+		event: React.PointerEvent;
 		element: TimelineElementType;
 		track: TimelineTrack;
 		side: "left" | "right";
@@ -655,10 +655,17 @@ function ResizeHandle({
 		<button
 			type="button"
 			className={cn(
-				"absolute top-0 bottom-0 w-2",
-				isLeft ? "-left-1 cursor-w-resize" : "-right-1 cursor-e-resize",
+				// Larger hit area on touch devices (coarse pointer) — drag handles
+				// jump from 8px wide to 16px so a fingertip can reliably grab them.
+				// Visual stays 2px via the inset; this is invisible padding.
+				"absolute top-0 bottom-0 w-2 touch-none pointer-coarse:w-4",
+				isLeft
+					? "-left-1 cursor-w-resize pointer-coarse:-left-2"
+					: "-right-1 cursor-e-resize pointer-coarse:-right-2",
 			)}
-			onMouseDown={(event) => onResizeStart({ event, element, track, side })}
+			onPointerDown={(event) =>
+				onResizeStart({ event, element, track, side })
+			}
 			onClick={(event) => event.stopPropagation()}
 			aria-label={`${isLeft ? "Left" : "Right"} resize handle`}
 		></button>

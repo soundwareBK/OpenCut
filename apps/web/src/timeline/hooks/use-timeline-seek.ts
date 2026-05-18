@@ -57,9 +57,9 @@ export function useTimelineSeek({
 	useEffect(() => () => controller.destroy(), [controller]);
 
 	return {
-		handleTracksMouseDown: controller.onTracksMouseDown,
+		handleTracksPointerDown: controller.onTracksPointerDown,
 		handleTracksClick: controller.onTracksClick,
-		handleRulerMouseDown: controller.onRulerMouseDown,
+		handleRulerPointerDown: controller.onRulerPointerDown,
 		handleRulerClick: controller.onRulerClick,
 	};
 }

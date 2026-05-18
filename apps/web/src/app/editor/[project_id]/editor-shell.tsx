@@ -44,6 +44,11 @@ import { VizzySignalIndicator } from "@/lib/vizzy/signal-indicator";
 import { VizzyAutoImporter } from "@/lib/vizzy/auto-importer";
 // Live preview: floating tile mirroring Vizzy's reactive visualizer.
 import { VizzyLivePreview } from "@/lib/vizzy/live-preview";
+// Vizzy mobile shell — vertical CapCut-style layout for phone & tablet.
+// Selected based on viewport size in EditorLayout below; desktop keeps the
+// existing ResizablePanelGroup layout unchanged.
+import { useViewport } from "@/hooks/use-viewport";
+import { MobileEditorShell } from "@/mobile/editor-shell";
 
 export default function Editor() {
 	const params = useParams();
@@ -108,6 +113,7 @@ function EditorLayout() {
 		overlay: bookmarkNotesPreviewOverlay,
 		overlays,
 	});
+	const { isCompact } = useViewport();
 
 	const overlaySource = useMemo(
 		() =>
@@ -138,6 +144,16 @@ function EditorLayout() {
 			),
 		[overlaySource.definitions, overlays],
 	);
+
+	const previewProps = {
+		overlayControls,
+		overlayInstances: overlaySource.instances,
+		onOverlayVisibilityChange: setOverlayVisibility,
+	};
+
+	if (isCompact) {
+		return <MobileEditorShell previewProps={previewProps} />;
+	}
 
 	return (
 		<ResizablePanelGroup

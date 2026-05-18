@@ -19,8 +19,8 @@ interface TimelineRulerProps {
 	tracksScrollRef: React.RefObject<HTMLElement | null>;
 	handleWheel: (e: React.WheelEvent) => void;
 	handleTimelineContentClick: (e: React.MouseEvent) => void;
-	handleRulerTrackingMouseDown: (e: React.MouseEvent) => void;
-	handleRulerMouseDown: (e: React.MouseEvent) => void;
+	handleRulerTrackingPointerDown: (e: React.PointerEvent) => void;
+	handleRulerPointerDown: (e: React.PointerEvent) => void;
 }
 
 export function TimelineRuler({
@@ -30,8 +30,8 @@ export function TimelineRuler({
 	tracksScrollRef,
 	handleWheel,
 	handleTimelineContentClick,
-	handleRulerTrackingMouseDown,
-	handleRulerMouseDown,
+	handleRulerTrackingPointerDown,
+	handleRulerPointerDown,
 }: TimelineRulerProps) {
 	const durationTicks = useEditor((e) => e.timeline.getTotalDuration());
 	const durationSeconds = mediaTimeToSeconds({ time: durationTicks });
@@ -118,18 +118,18 @@ export function TimelineRuler({
 					handleTimelineContentClick(event);
 				}
 			}}
-			onMouseDown={handleRulerTrackingMouseDown}
+			onPointerDown={handleRulerTrackingPointerDown}
 			onKeyDown={() => {}}
 		>
 			<div
 				role="none"
 				ref={rulerRef}
-				className="relative cursor-default select-none"
+				className="relative cursor-default select-none touch-none"
 				style={{
 					height: TIMELINE_RULER_HEIGHT_PX,
 					width: `${dynamicTimelineWidth}px`,
 				}}
-				onMouseDown={handleRulerMouseDown}
+				onPointerDown={handleRulerPointerDown}
 			>
 				{timelineTicks}
 				<VizzyBeatOverlay

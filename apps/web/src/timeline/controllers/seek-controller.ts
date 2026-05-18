@@ -1,4 +1,7 @@
-import type { MouseEvent as ReactMouseEvent } from "react";
+import type {
+	MouseEvent as ReactMouseEvent,
+	PointerEvent as ReactPointerEvent,
+} from "react";
 import type { FrameRate } from "opencut-wasm";
 import { BASE_TIMELINE_PIXELS_PER_SECOND } from "@/timeline/scale";
 import { mediaTime, snapSeekMediaTime, TICKS_PER_SECOND, type MediaTime } from "@/wasm";
@@ -83,8 +86,8 @@ export class SeekController {
 
 	constructor(deps: { configRef: SeekConfigRef }) {
 		this.configRef = deps.configRef;
-		this.onTracksMouseDown = this.onTracksMouseDown.bind(this);
-		this.onRulerMouseDown = this.onRulerMouseDown.bind(this);
+		this.onTracksPointerDown = this.onTracksPointerDown.bind(this);
+		this.onRulerPointerDown = this.onRulerPointerDown.bind(this);
 		this.onTracksClick = this.onTracksClick.bind(this);
 		this.onRulerClick = this.onRulerClick.bind(this);
 	}
@@ -97,11 +100,11 @@ export class SeekController {
 		this.session = { kind: "idle" };
 	}
 
-	onTracksMouseDown(event: ReactMouseEvent): void {
+	onTracksPointerDown(event: ReactPointerEvent): void {
 		this.beginPendingSeek({ event, source: "tracks" });
 	}
 
-	onRulerMouseDown(event: ReactMouseEvent): void {
+	onRulerPointerDown(event: ReactPointerEvent): void {
 		this.beginPendingSeek({ event, source: "ruler" });
 	}
 
@@ -117,7 +120,7 @@ export class SeekController {
 		event,
 		source,
 	}: {
-		event: ReactMouseEvent;
+		event: ReactPointerEvent;
 		source: SeekSource;
 	}): void {
 		if (event.button !== 0) return;

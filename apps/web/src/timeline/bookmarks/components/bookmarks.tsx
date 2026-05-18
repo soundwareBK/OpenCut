@@ -65,8 +65,8 @@ interface TimelineBookmarksRowProps {
 	}) => void;
 	handleWheel: (event: React.WheelEvent) => void;
 	handleTimelineContentClick: (event: React.MouseEvent) => void;
-	handleRulerTrackingMouseDown: (event: React.MouseEvent) => void;
-	handleRulerMouseDown: (event: React.MouseEvent) => void;
+	handleRulerTrackingPointerDown: (event: React.PointerEvent) => void;
+	handleRulerPointerDown: (event: React.PointerEvent) => void;
 }
 
 export function TimelineBookmarksRow({
@@ -76,8 +76,8 @@ export function TimelineBookmarksRow({
 	onBookmarkMouseDown,
 	handleWheel,
 	handleTimelineContentClick,
-	handleRulerTrackingMouseDown,
-	handleRulerMouseDown,
+	handleRulerTrackingPointerDown,
+	handleRulerPointerDown,
 }: TimelineBookmarksRowProps) {
 	const bookmarks = useEditor((e) => e.scenes.getActiveScene().bookmarks);
 
@@ -99,10 +99,10 @@ export function TimelineBookmarksRow({
 					if (!event.currentTarget.contains(event.target as Node)) return;
 					handleTimelineContentClick(event);
 				}}
-				onMouseDown={(event) => {
+				onPointerDown={(event) => {
 					if (!event.currentTarget.contains(event.target as Node)) return;
-					handleRulerMouseDown(event);
-					handleRulerTrackingMouseDown(event);
+					handleRulerPointerDown(event);
+					handleRulerTrackingPointerDown(event);
 				}}
 			>
 				{bookmarks.map((bookmark) => (
