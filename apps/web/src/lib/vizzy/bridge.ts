@@ -135,6 +135,13 @@ type BridgeState = {
 	snapToBeat: boolean;
 	snapWindowSec: number;
 
+	/** User-supplied BPM override. When non-null, `useVizzyBpm` returns
+	 * this instead of the auto-detected value. Lets users correct the
+	 * analyzer when it picks the wrong tempo octave (common in dnb / trap /
+	 * songs with strong off-beat snares) or enter a known BPM from the
+	 * track's metadata. */
+	userBpmOverride: number | null;
+
 	setConnected: (connected: boolean) => void;
 	setFrame: (frame: VizzyFrame) => void;
 	setAudioMedia: (media: VizzyMedia | null) => void;
@@ -146,6 +153,7 @@ type BridgeState = {
 	setAnalyzing: (analyzing: boolean, progress?: number) => void;
 	toggleSnapToBeat: () => void;
 	setSnapWindow: (sec: number) => void;
+	setUserBpmOverride: (bpm: number | null) => void;
 };
 
 // Minimum gap between beat timestamps we record (seconds). Onset detection
@@ -166,6 +174,7 @@ export const useVizzyBridge = create<BridgeState>((set, get) => ({
 	analyzeProgress: 0,
 	snapToBeat: false,
 	snapWindowSec: 0.5,
+	userBpmOverride: null,
 
 	setConnected: (connected) => set({ connected }),
 	setFrame: (frame) =>
@@ -177,6 +186,16 @@ export const useVizzyBridge = create<BridgeState>((set, get) => ({
 		set({ analyzing, analyzeProgress: progress ?? (analyzing ? 0 : 1) }),
 	toggleSnapToBeat: () => set((s) => ({ snapToBeat: !s.snapToBeat })),
 	setSnapWindow: (sec) => set({ snapWindowSec: Math.max(0.05, sec) }),
+	setUserBpmOverride: (bpm) => {
+		if (bpm === null) {
+			set({ userBpmOverride: null });
+			return;
+		}
+		if (!Number.isFinite(bpm) || bpm <= 0) return;
+		// Clamp to a sane musical range — most material lives in [40, 300].
+		const clamped = Math.max(20, Math.min(400, bpm));
+		set({ userBpmOverride: clamped });
+	},
 
 	pushBeat: (t) => {
 		const beats = get().beats;
@@ -379,6 +398,68 @@ export function useVizzyOfflineSignal(
 		case "bassiness": return lastFrame.profile?.bassiness ?? 0;
 		case "brightness": return lastFrame.profile?.brightness ?? 0;
 	}
+}
+
+/**
+ * Estimate the song's BPM from the offline beat grid. Uses the median
+ * inter-beat interval — robust to outliers (occasional missed kicks or
+ * spurious snare-as-beat hits) compared to the mean.
+ *
+ * Returns 0 when no offline curve or fewer than 4 beats (not enough
+ * intervals to make a confident estimate). Callers should treat a 0 BPM
+ * as "no analysis yet" and disable BPM-dependent UI accordingly.
+ *
+ * Production analyzers (Ableton, Logic) use tempogram autocorrelation
+ * for higher accuracy across complex tempo curves — that's out of scope
+ * here. For most modern music with steady tempo the median-interval
+ * estimate is within ±1 BPM of the true tempo.
+ */
+export function getEstimatedBpm(): number {
+	const offline = useVizzyBridge.getState().offline;
+	if (!offline || offline.beats.length < 4) return 0;
+	const intervals: number[] = [];
+	for (let i = 1; i < offline.beats.length; i++) {
+		intervals.push(offline.beats[i] - offline.beats[i - 1]);
+	}
+	intervals.sort((a, b) => a - b);
+	const median = intervals[Math.floor(intervals.length / 2)];
+	if (!median || !Number.isFinite(median)) return 0;
+	return 60 / median;
+}
+
+/**
+ * React hook: returns the user-supplied BPM override if set, otherwise
+ * the auto-detected value from the offline beat grid. Returns 0 only
+ * when neither source has a value (no analysis yet AND no manual entry).
+ */
+export function useVizzyBpm(): number {
+	const offline = useVizzyBridge((s) => s.offline);
+	const userBpm = useVizzyBridge((s) => s.userBpmOverride);
+	if (userBpm && userBpm > 0) return userBpm;
+	if (!offline || offline.beats.length < 4) return 0;
+	const intervals: number[] = [];
+	for (let i = 1; i < offline.beats.length; i++) {
+		intervals.push(offline.beats[i] - offline.beats[i - 1]);
+	}
+	intervals.sort((a, b) => a - b);
+	const median = intervals[Math.floor(intervals.length / 2)];
+	if (!median || !Number.isFinite(median)) return 0;
+	return 60 / median;
+}
+
+/** Returns the auto-detected BPM (ignores any user override). Used by
+ *  the speed-tab UI to show "auto: 124.5" alongside the editable input. */
+export function useVizzyAutoBpm(): number {
+	const offline = useVizzyBridge((s) => s.offline);
+	if (!offline || offline.beats.length < 4) return 0;
+	const intervals: number[] = [];
+	for (let i = 1; i < offline.beats.length; i++) {
+		intervals.push(offline.beats[i] - offline.beats[i - 1]);
+	}
+	intervals.sort((a, b) => a - b);
+	const median = intervals[Math.floor(intervals.length / 2)];
+	if (!median || !Number.isFinite(median)) return 0;
+	return 60 / median;
 }
 
 /**
