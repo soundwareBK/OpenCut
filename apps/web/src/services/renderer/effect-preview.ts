@@ -5,7 +5,9 @@ import type { ParamValues } from "@/params";
 import { gpuRenderer } from "./gpu-renderer";
 
 const PREVIEW_SIZE = 160;
-const PREVIEW_IMAGE_PATH = "/effects/preview.jpg";
+// Vizzy fork: bundle is served under /opencut-dist/, so this absolute
+// path needs the basePath prefix.
+const PREVIEW_IMAGE_PATH = "/opencut-dist/effects/preview.jpg";
 
 class EffectPreviewService {
 	private testSourceCanvas: OffscreenCanvas | null = null;

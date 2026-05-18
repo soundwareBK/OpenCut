@@ -10,11 +10,15 @@ import {
 	maxMediaTime,
 	mediaTime,
 	mediaTimeFromSeconds,
+	mediaTimeToSeconds,
 	minMediaTime,
 	subMediaTime,
 	TICKS_PER_SECOND,
 	ZERO_MEDIA_TIME,
 } from "@/wasm";
+// Vizzy fork: split actions optionally snap their cut point to the
+// nearest detected beat from the offline-analyzed audio.
+import { maybeSnapToBeat } from "@/lib/vizzy/bridge";
 import { useKeyframeSelection } from "@/timeline/hooks/element/use-keyframe-selection";
 import { getElementsAtTime, hasMediaId } from "@/timeline";
 import { cancelInteraction } from "@/editor/cancel-interaction";
@@ -26,6 +30,18 @@ import {
 	type ScopeEntry,
 } from "@/selection/scope";
 import { useCommittedRef } from "@/hooks/use-committed-ref";
+
+/**
+ * Vizzy fork: convert a MediaTime to seconds, run it through the
+ * snap-to-beat helper, and convert back. When snap-to-beat is disabled
+ * or there's no beat near `time`, returns the input unchanged.
+ */
+function vizzySnap(time: import("@/wasm").MediaTime): import("@/wasm").MediaTime {
+	const seconds = mediaTimeToSeconds({ time });
+	const snapped = maybeSnapToBeat(seconds);
+	if (snapped === seconds) return time;
+	return mediaTimeFromSeconds({ seconds: snapped });
+}
 
 export function useEditorActions() {
 	const editor = useEditor();
@@ -221,20 +237,23 @@ export function useEditorActions() {
 		"split",
 		() => {
 			const currentTime = editor.playback.getCurrentTime();
+			// Vizzy fork: optionally snap the cut to the nearest detected
+			// beat. No-op when snap-to-beat is off or no beats analyzed.
+			const splitTime = vizzySnap(currentTime);
 			const tracks = editor.scenes.getActiveScene().tracks;
 			const elementsToSplit =
 				selectedElements.length > 0
 					? selectedElements
 					: getElementsAtTime({
 							tracks,
-							time: currentTime,
+							time: splitTime,
 						});
 
 			if (elementsToSplit.length === 0) return;
 
 			editor.timeline.splitElements({
 				elements: elementsToSplit,
-				splitTime: currentTime,
+				splitTime,
 			});
 		},
 		undefined,
@@ -244,20 +263,21 @@ export function useEditorActions() {
 		"split-left",
 		() => {
 			const currentTime = editor.playback.getCurrentTime();
+			const splitTime = vizzySnap(currentTime);
 			const tracks = editor.scenes.getActiveScene().tracks;
 			const elementsToSplit =
 				selectedElements.length > 0
 					? selectedElements
 					: getElementsAtTime({
 							tracks,
-							time: currentTime,
+							time: splitTime,
 						});
 
 			if (elementsToSplit.length === 0) return;
 
 			const rightSideElements = editor.timeline.splitElements({
 				elements: elementsToSplit,
-				splitTime: currentTime,
+				splitTime,
 				retainSide: "right",
 			});
 
@@ -277,20 +297,21 @@ export function useEditorActions() {
 		"split-right",
 		() => {
 			const currentTime = editor.playback.getCurrentTime();
+			const splitTime = vizzySnap(currentTime);
 			const tracks = editor.scenes.getActiveScene().tracks;
 			const elementsToSplit =
 				selectedElements.length > 0
 					? selectedElements
 					: getElementsAtTime({
 							tracks,
-							time: currentTime,
+							time: splitTime,
 						});
 
 			if (elementsToSplit.length === 0) return;
 
 			editor.timeline.splitElements({
 				elements: elementsToSplit,
-				splitTime: currentTime,
+				splitTime,
 				retainSide: "left",
 			});
 		},

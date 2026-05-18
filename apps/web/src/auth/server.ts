@@ -1,43 +1,22 @@
-import { betterAuth, type RateLimit } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { Redis } from "@upstash/redis";
-import { db } from "@/db";
-import { webEnv } from "@/env/web";
+// Vizzy fork: server-side auth is disabled in the static browser-only
+// build. The original Better Auth + Drizzle + Upstash Redis wiring is
+// replaced with a stub that exposes the same surface used elsewhere in
+// the source tree (just enough to satisfy imports during static export).
+//
+// At runtime no caller hits this — the API routes that used it have been
+// deleted, and the editor itself never imports from here.
 
-const redis = new Redis({
-	url: webEnv.UPSTASH_REDIS_REST_URL,
-	token: webEnv.UPSTASH_REDIS_REST_TOKEN,
-});
+type StubHandler = (req: Request) => Promise<Response>;
 
-export const auth = betterAuth({
-	database: drizzleAdapter(db, {
-		provider: "pg",
-		usePlural: true,
-	}),
-	secret: webEnv.BETTER_AUTH_SECRET,
-	user: {
-		deleteUser: {
-			enabled: true,
-		},
-	},
-	emailAndPassword: {
-		enabled: true,
-	},
-	rateLimit: {
-		storage: "secondary-storage",
-		customStorage: {
-			get: async (key) => {
-				const value = await redis.get(key);
-				return value as RateLimit | undefined;
-			},
-			set: async (key, value) => {
-				await redis.set(key, value);
-			},
-		},
-	},
-	baseURL: webEnv.NEXT_PUBLIC_SITE_URL,
-	appName: "OpenCut",
-	trustedOrigins: [webEnv.NEXT_PUBLIC_SITE_URL],
-});
+const handler: StubHandler = async () =>
+	new Response(
+		JSON.stringify({ error: "Auth disabled in static build" }),
+		{ status: 501, headers: { "content-type": "application/json" } },
+	);
+
+export const auth = {
+	handler,
+	api: {} as Record<string, never>,
+};
 
 export type Auth = typeof auth;

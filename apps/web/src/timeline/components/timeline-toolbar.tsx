@@ -28,6 +28,10 @@ import {
 import { hasMediaId } from "@/timeline";
 import { cn } from "@/utils/ui";
 import { useTimelineStore } from "@/timeline/timeline-store";
+// Vizzy fork: snap-to-beat toggle + magic auto-cut.
+import { useState } from "react";
+import { useVizzyBridge } from "@/lib/vizzy/bridge";
+import { MagicCutDialog } from "@/lib/vizzy/magic-cut-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	Bookmark02Icon,
@@ -285,6 +289,12 @@ function ToolbarRightSection({
 	const rippleEditingEnabled = useTimelineStore((s) => s.rippleEditingEnabled);
 	const toggleSnapping = useTimelineStore((s) => s.toggleSnapping);
 	const toggleRippleEditing = useTimelineStore((s) => s.toggleRippleEditing);
+	// Vizzy fork.
+	const snapToBeat = useVizzyBridge((s) => s.snapToBeat);
+	const toggleSnapToBeat = useVizzyBridge((s) => s.toggleSnapToBeat);
+	const hasOfflineBeats = useVizzyBridge((s) => (s.offline?.beats.length ?? 0) > 0);
+	const isAnalyzing = useVizzyBridge((s) => s.analyzing);
+	const [magicCutOpen, setMagicCutOpen] = useState(false);
 
 	return (
 		<div className="flex items-center gap-1">
@@ -304,7 +314,74 @@ function ToolbarRightSection({
 					tooltip="Ripple editing"
 					onClick={() => toggleRippleEditing()}
 				/>
+
+				{/* Vizzy fork: snap cuts to beats from offline analysis. */}
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							variant="text"
+							size="icon"
+							onClick={() => toggleSnapToBeat()}
+							disabled={!hasOfflineBeats && !isAnalyzing}
+							className={cn(
+								"text-foreground",
+								snapToBeat && "bg-accent",
+								!hasOfflineBeats && "opacity-40",
+							)}
+							aria-pressed={snapToBeat}
+						>
+							{/* Simple beat icon — a vertical bar with two dots. */}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+								<line x1="12" y1="2" x2="12" y2="22" />
+								<circle cx="6" cy="12" r="1.5" fill="currentColor" />
+								<circle cx="18" cy="12" r="1.5" fill="currentColor" />
+							</svg>
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>
+						{isAnalyzing
+							? "Analyzing audio for beats…"
+							: hasOfflineBeats
+								? snapToBeat ? "Snap-to-beat: ON" : "Snap-to-beat: OFF"
+								: "Snap-to-beat (import audio first)"}
+					</TooltipContent>
+				</Tooltip>
+
+				{/* Vizzy fork: magic auto-cut — opens an options dialog so the
+				    user picks rhythm, clips, and whether to clear existing
+				    tracks. Single undoable batch. */}
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							variant="text"
+							size="icon"
+							onClick={() => setMagicCutOpen(true)}
+							disabled={!hasOfflineBeats}
+							className={cn("text-foreground", !hasOfflineBeats && "opacity-40")}
+						>
+							{/* Wand-spark icon. */}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+								<path d="M15 4V2" />
+								<path d="M15 16v-2" />
+								<path d="M8 9h2" />
+								<path d="M20 9h2" />
+								<path d="M17.8 11.8 19 13" />
+								<path d="M15 9h.01" />
+								<path d="M17.8 6.2 19 5" />
+								<path d="m3 21 9-9" />
+								<path d="M12.2 6.2 11 5" />
+							</svg>
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>
+						{hasOfflineBeats
+							? "Magic Auto-Cut…"
+							: "Magic Auto-Cut (import audio first)"}
+					</TooltipContent>
+				</Tooltip>
 			</TooltipProvider>
+
+			<MagicCutDialog open={magicCutOpen} onClose={() => setMagicCutOpen(false)} />
 
 			<div className="bg-border mx-1 h-6 w-px" />
 

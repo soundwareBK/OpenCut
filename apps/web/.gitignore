@@ -7,6 +7,11 @@
 
 .next/
 
+# Static export bundle — produced by `bun run build` (output: 'export'
+# in next.config.ts). Vizzy fork: regenerated locally by
+# scripts/build-opencut.sh; never checked in.
+out/
+
 .font-cache/
 
 next-env.d.ts

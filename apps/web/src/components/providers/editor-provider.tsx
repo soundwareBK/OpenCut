@@ -55,11 +55,19 @@ export function EditorProvider({ projectId, children }: EditorProviderProps) {
 						err.message.includes("does not exist"));
 
 				if (isNotFound) {
+					// Vizzy fork: in the static-export embed only /editor/default
+					// is prerendered, so we can't redirect to /editor/<uuid>.
+					// Instead, create the new project and load it directly — the
+					// URL stays at /editor/default while the editor's internal
+					// state holds whatever project is current.
 					try {
 						const newProjectId = await editor.project.createNewProject({
 							name: "Untitled Project",
 						});
-						router.replace(`/editor/${newProjectId}`);
+						await editor.project.loadProject({ id: newProjectId });
+						if (cancelled) return;
+						setIsLoading(false);
+						loadFontAtlas();
 					} catch (_createErr) {
 						setError("Failed to create project");
 						setIsLoading(false);

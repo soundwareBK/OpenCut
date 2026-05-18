@@ -1,17 +1,22 @@
 "use client";
 
+// Vizzy fork: rebranded onboarding for the Advanced Mode embed. Three short
+// steps that frame the timeline editor as Vizzy's "orchestrate" tier, point
+// out it's beta, and remind the user how to get back to basic mode.
+
 import { ArrowRightIcon } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { SOCIAL_LINKS } from "@/site/social";
 import { useLocalStorage } from "@/services/storage/use-local-storage";
 import { Button } from "../ui/button";
 import { Dialog, DialogBody, DialogContent, DialogTitle } from "../ui/dialog";
 
 export function Onboarding() {
 	const [step, setStep] = useState(0);
+	// Vizzy fork: key bumped to "...-vizzy-v1" so the rebranded dialog fires
+	// even for users who already dismissed the upstream OpenCut version.
 	const [hasSeenOnboarding, setHasSeenOnboarding] = useLocalStorage({
-		key: "hasSeenOnboarding",
+		key: "hasSeenOnboarding-vizzy-v1",
 		defaultValue: false,
 	});
 
@@ -28,13 +33,13 @@ export function Onboarding() {
 	const getStepTitle = () => {
 		switch (step) {
 			case 0:
-				return "Welcome to OpenCut Beta! 🎉";
+				return "Welcome to Advanced Mode 🎬";
 			case 1:
-				return "⚠️ This is a super early beta!";
+				return "Still early — expect rough edges";
 			case 2:
-				return "🦋 Have fun testing!";
+				return "Have fun orchestrating";
 			default:
-				return "OpenCut Onboarding";
+				return "Vizzy Advanced Mode";
 		}
 	};
 
@@ -44,8 +49,8 @@ export function Onboarding() {
 				return (
 					<div className="space-y-5">
 						<div className="space-y-3">
-							<Title title="Welcome to OpenCut Beta! 🎉" />
-							<Description description="You're among the first to try OpenCut - the fully open source CapCut alternative." />
+							<Title title="Welcome to Advanced Mode 🎬" />
+							<Description description="This is Vizzy's timeline tier — drop in clips, arrange them, and cut to the music. Your song's beat, energy, and drops are available as bindable signals for clip properties." />
 						</div>
 						<NextButton onClick={handleNext}>Next</NextButton>
 					</div>
@@ -55,9 +60,8 @@ export function Onboarding() {
 					<div className="space-y-5">
 						<div className="space-y-3">
 							<Title title={getStepTitle()} />
-							<Description description="There's still a ton of things to do to make this editor amazing." />
-							<Description description="A lot of features are still missing. We're working hard to build them out!" />
-							<Description description="If you're curious, check out our roadmap [here](https://opencut.app/roadmap)" />
+							<Description description="Advanced Mode is brand new. Some workflows are smooth, others are unfinished. Music-signal binding ships next." />
+							<Description description="If something breaks, flip Advanced Mode off in settings to get back to basic visualizer mode." />
 						</div>
 						<NextButton onClick={handleNext}>Next</NextButton>
 					</div>
@@ -67,11 +71,9 @@ export function Onboarding() {
 					<div className="space-y-5">
 						<div className="space-y-3">
 							<Title title={getStepTitle()} />
-							<Description
-								description={`Join our [Discord](${SOCIAL_LINKS.discord}), chat with cool people and share feedback to help make OpenCut the best editor ever.`}
-							/>
+							<Description description="Drop in some clips, scrub the timeline, and start orchestrating. Press **Esc** any time to exit back to basic mode." />
 						</div>
-						<NextButton onClick={handleClose}>Finish</NextButton>
+						<NextButton onClick={handleClose}>Start editing</NextButton>
 					</div>
 				);
 			default:

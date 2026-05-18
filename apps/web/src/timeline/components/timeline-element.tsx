@@ -75,6 +75,12 @@ import {
 	KeyframeIcon,
 	MagicWand05Icon,
 } from "@hugeicons/core-free-icons";
+// Vizzy fork: trigger offline beat detection from the audio element's
+// right-click menu. Lets users use any imported audio for Magic Cut,
+// not just the one auto-imported from basic mode.
+import { analyzeAndStoreCurve } from "@/lib/vizzy/analyze-controller";
+import { useVizzyBridge } from "@/lib/vizzy/bridge";
+import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { uppercase } from "@/utils/string";
 import { useMemo, type ComponentProps, type ReactNode } from "react";
@@ -498,6 +504,11 @@ export function TimelineElement({
 							</ContextMenuItem>
 						</>
 					)}
+					{/* Vizzy fork: detect beats on an audio element. Enables
+					    Magic Auto-Cut + snap-to-beat for any audio you imported,
+					    not just whatever auto-synced from basic mode. */}
+					<VizzyDetectBeatsMenuItem element={element} />
+
 					<ContextMenuSeparator />
 					<DeleteMenuItem
 						isMultipleSelected={selectedElements.length > 1}
@@ -1293,6 +1304,66 @@ function ActionMenuItem({
 			{...props}
 		>
 			{children}
+		</ContextMenuItem>
+	);
+}
+
+
+/**
+ * Vizzy fork: "Detect beats" context-menu item shown on audio timeline
+ * elements. Runs the offline analyzer on the element's source File and
+ * stores the resulting feature curve on the bridge so Magic Auto-Cut +
+ * snap-to-beat light up.
+ */
+function VizzyDetectBeatsMenuItem({ element }: { element: TimelineElementType }) {
+	const editor = useEditor();
+	const analyzing = useVizzyBridge((s) => s.analyzing);
+	const offlineFingerprint = useVizzyBridge((s) => s.offline?.fingerprint);
+
+	if (element.type !== "audio") return null;
+	if (!hasMediaId(element)) return null;
+
+	const mediaId = (element as { mediaId?: string }).mediaId;
+	if (!mediaId) return null;
+	const asset = editor.media.getAssets().find((a) => a.id === mediaId);
+	if (!asset) return null;
+	if (asset.type !== "audio") return null;
+
+	const file = (asset as { file?: File }).file;
+	if (!file) return null;
+
+	const fingerprint = `${file.name}::${file.size}`;
+	const alreadyAnalyzed = offlineFingerprint === fingerprint;
+	const label = analyzing
+		? "Analyzing beats…"
+		: alreadyAnalyzed
+			? "Re-detect beats"
+			: "Detect beats for Magic Cut";
+
+	return (
+		<ContextMenuItem
+			icon={
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+					<line x1="3" y1="12" x2="5" y2="12" />
+					<line x1="7" y1="7" x2="7" y2="17" />
+					<line x1="11" y1="3" x2="11" y2="21" />
+					<line x1="15" y1="6" x2="15" y2="18" />
+					<line x1="19" y1="10" x2="19" y2="14" />
+				</svg>
+			}
+			disabled={analyzing}
+			onClick={(event: React.MouseEvent) => {
+				event.stopPropagation();
+				analyzeAndStoreCurve(file, { key: fingerprint, force: alreadyAnalyzed }).catch(
+					(err) => {
+						toast.error("Beat detection failed", {
+							description: err instanceof Error ? err.message : String(err),
+						});
+					},
+				);
+			}}
+		>
+			{label}
 		</ContextMenuItem>
 	);
 }

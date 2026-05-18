@@ -8,6 +8,9 @@ import { useEditor } from "@/editor/use-editor";
 import { getRulerConfig, shouldShowLabel } from "@/timeline/ruler-utils";
 import { useScrollPosition } from "@/timeline/hooks/use-scroll-position";
 import { TimelineTick } from "./timeline-tick";
+// Vizzy fork: overlay detected beats + drops on the timeline ruler so
+// snap-to-beat is visible to the user before they make a cut.
+import { useVizzyBridge } from "@/lib/vizzy/bridge";
 
 interface TimelineRulerProps {
 	zoomLevel: number;
@@ -129,7 +132,76 @@ export function TimelineRuler({
 				onMouseDown={handleRulerMouseDown}
 			>
 				{timelineTicks}
+				<VizzyBeatOverlay
+					pixelsPerSecond={pixelsPerSecond}
+					visibleStartSec={visibleStartTimeSeconds}
+					visibleEndSec={visibleEndTimeSeconds}
+				/>
 			</div>
 		</div>
 	);
+}
+
+/**
+ * Vizzy fork: render kick (white tick) and drop (orange wider tick) markers
+ * inside the timeline ruler. Only paints the visible window to keep the DOM
+ * cheap on long tracks. Pointer events disabled so it doesn't interfere
+ * with click-to-seek on the ruler.
+ */
+function VizzyBeatOverlay({
+	pixelsPerSecond,
+	visibleStartSec,
+	visibleEndSec,
+}: {
+	pixelsPerSecond: number;
+	visibleStartSec: number;
+	visibleEndSec: number;
+}) {
+	const beats = useVizzyBridge((s) => s.offline?.beats);
+	const drops = useVizzyBridge((s) => s.offline?.drops);
+	if (!beats?.length && !drops?.length) return null;
+
+	const beatNodes: JSX.Element[] = [];
+	if (beats) {
+		for (let i = 0; i < beats.length; i++) {
+			const t = beats[i];
+			if (t < visibleStartSec || t > visibleEndSec) continue;
+			beatNodes.push(
+				<div
+					key={`b${i}`}
+					style={{
+						position: "absolute",
+						left: `${t * pixelsPerSecond}px`,
+						bottom: 0,
+						width: 1,
+						height: 10,
+						background: "rgba(255,255,255,0.55)",
+						pointerEvents: "none",
+					}}
+				/>,
+			);
+		}
+	}
+	const dropNodes: JSX.Element[] = [];
+	if (drops) {
+		for (let i = 0; i < drops.length; i++) {
+			const t = drops[i];
+			if (t < visibleStartSec || t > visibleEndSec) continue;
+			dropNodes.push(
+				<div
+					key={`d${i}`}
+					style={{
+						position: "absolute",
+						left: `${t * pixelsPerSecond - 1}px`,
+						bottom: 0,
+						width: 3,
+						height: 16,
+						background: "rgba(255,160,60,0.95)",
+						pointerEvents: "none",
+					}}
+				/>,
+			);
+		}
+	}
+	return <>{beatNodes}{dropNodes}</>;
 }

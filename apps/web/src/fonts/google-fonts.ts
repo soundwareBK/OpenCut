@@ -2,8 +2,11 @@ import type { FontAtlas } from "@/fonts/types";
 import { SYSTEM_FONTS } from "@/fonts/system-fonts";
 
 const GOOGLE_FONTS_CSS = "https://fonts.googleapis.com/css2";
-const FONT_ATLAS_PATH = "/fonts/font-atlas.json";
-const FONT_CHUNK_PATH_PREFIX = "/fonts/font-chunk-";
+// Vizzy fork: bundle is served under /opencut-dist/, so absolute /public
+// asset paths fetched directly need the basePath prefix (Next.js only
+// rewrites <Link>/<Image>, not raw fetch URLs).
+const FONT_ATLAS_PATH = "/opencut-dist/fonts/font-atlas.json";
+const FONT_CHUNK_PATH_PREFIX = "/opencut-dist/fonts/font-chunk-";
 
 const fullLoaded = new Set<string>();
 

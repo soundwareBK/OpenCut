@@ -63,7 +63,13 @@ function ProjectDropdown() {
 			console.error("Failed to prepare project exit:", error);
 		} finally {
 			editor.project.closeProject();
-			router.push("/projects");
+			// Vizzy fork: there is no /projects route in the static export.
+			// Notify the parent (Vizzy host) so it can flip Advanced Mode off;
+			// it'll be ignored when running standalone.
+			if (typeof window !== "undefined" && window.parent !== window) {
+				window.parent.postMessage({ type: "opencut:exit" }, "*");
+			}
+			setIsExiting(false);
 		}
 	};
 
@@ -95,7 +101,10 @@ function ProjectDropdown() {
 				await editor.project.deleteProjects({
 					ids: [activeProject.metadata.id],
 				});
-				router.push("/projects");
+				// Vizzy fork: no /projects route exists. closeProject() trips
+				// the EditorProvider's loadProject path, which will create a
+				// fresh "Untitled Project" in place (see editor-provider.tsx).
+				editor.project.closeProject();
 			} catch (error) {
 				toast.error("Failed to delete project", {
 					description:
