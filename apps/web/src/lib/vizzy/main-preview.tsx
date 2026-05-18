@@ -101,9 +101,10 @@ export function VizzyMainPreview() {
 		writeVisible(next);
 	};
 
-	// Floating toggle chip when hidden — small button in the top-right of the
-	// preview area to bring the Vizzy live feed back. Sits OUTSIDE the
-	// conditional below so it's always reachable.
+	// Floating toggle chip when hidden — small button in the TOP-LEFT of the
+	// preview area to bring the Vizzy live feed back. Top-right is reserved
+	// for the iframe-level Export button (export-button.tsx); placing chrome
+	// there causes a visual collision with Export's chip.
 	if (!visible) {
 		return (
 			<button
@@ -113,7 +114,7 @@ export function VizzyMainPreview() {
 				style={{
 					position: "absolute",
 					top: 8,
-					right: 8,
+					left: 8,
 					zIndex: 30,
 					background: "rgba(20,20,20,0.92)",
 					color: "rgba(255,255,255,0.9)",
@@ -165,12 +166,14 @@ export function VizzyMainPreview() {
 					pointerEvents: "none",
 				}}
 			/>
-			{/* Status pill + hide button, top-right of preview area. */}
+			{/* Status pill + hide button, TOP-LEFT of preview area. Export
+			    button at top-right is owned by the iframe shell, so source
+			    indicators live opposite. */}
 			<div
 				style={{
 					position: "absolute",
 					top: 8,
-					right: 8,
+					left: 8,
 					zIndex: 30,
 					display: "flex",
 					gap: 6,
