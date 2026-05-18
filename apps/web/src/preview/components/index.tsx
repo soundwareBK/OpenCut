@@ -12,6 +12,7 @@ import type { RootNode } from "@/services/renderer/nodes/root-node";
 import { buildScene } from "@/services/renderer/scene-builder";
 import { PreviewOverlayLayer } from "./overlay-layer";
 import { PreviewInteractionOverlay } from "./preview-interaction-overlay";
+import { VizzyMainPreview } from "@/lib/vizzy/main-preview";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import type {
 	PreviewOverlayControl,
@@ -326,6 +327,13 @@ function PreviewCanvas({
 									instances={overlayInstances}
 									plane="under-interaction"
 								/>
+								{/* Vizzy live feed covers the rendered scene canvas
+								    so the user sees their Basic-mode visualizer
+								    (scenes/filters/effects/lyrics) updating in
+								    real time as the main preview. Sits under the
+								    interaction overlay so timeline element handles
+								    still receive clicks above it. */}
+								<VizzyMainPreview />
 								<PreviewInteractionOverlay />
 								<PreviewOverlayLayer
 									instances={overlayInstances}

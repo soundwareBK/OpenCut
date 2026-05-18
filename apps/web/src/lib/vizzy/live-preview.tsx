@@ -158,7 +158,11 @@ export function VizzyLivePreview() {
 	// uses (x, y) directly until the drag ends and we snap back to a corner.
 	const [corner, setCorner] = useState<Corner>("br");
 	const [size, setSize] = useState({ w: DEFAULT_W, h: DEFAULT_H });
-	const [hidden, setHidden] = useState(false);
+	// Default hidden: the main preview area now shows the full Vizzy live feed
+	// (VizzyMainPreview), so the corner PiP is redundant on first open. The
+	// "Vizzy" chip in the corner restores it if the user wants a second view
+	// alongside an active timeline-render preview.
+	const [hidden, setHidden] = useState(true);
 	const [freePos, setFreePos] = useState<{ x: number; y: number } | null>(null);
 	const [capturing, setCapturing] = useState<null | { secLeft: number; total: number }>(null);
 	const captureDurationsRef = useRef<number>(8);
