@@ -63,11 +63,15 @@ export function ExportButton() {
 			onOpenChange={(open) => handlePopoverOpenChange({ open })}
 		>
 			<PopoverTrigger asChild>
+				{/* Vizzy fork: dropped OpenCut's blue gradient + glow in favor of
+				    a monochrome chip that matches the host #vizzyHeader chrome.
+				    See .vh-icon-btn in css/app-header.css — same scale + tone so
+				    the iframe's only top-affordance reads as part of the same bar. */}
 				<button
 					type="button"
 					className={cn(
-						"flex items-center gap-1.5 rounded-md bg-[#38BDF8] px-[0.12rem] py-[0.12rem] text-white",
-						hasProject ? "cursor-pointer" : "cursor-not-allowed opacity-50",
+						"inline-flex items-center gap-1.5 rounded-[10px] border border-white/10 bg-white/4 px-3 py-1.5 text-xs font-semibold tracking-wide text-white/90 backdrop-blur-md transition-colors hover:border-white/20 hover:bg-white/10 active:scale-[0.97]",
+						hasProject ? "cursor-pointer" : "cursor-not-allowed opacity-40",
 					)}
 					onClick={hasProject ? () => setIsExportPopoverOpen(true) : undefined}
 					disabled={!hasProject}
@@ -78,13 +82,8 @@ export function ExportButton() {
 						}
 					}}
 				>
-					<div className="relative flex items-center gap-1.5 rounded-[0.6rem] bg-linear-270 from-[#2567EC] to-[#37B6F7] px-4 py-1 shadow-[0_1px_3px_0px_rgba(0,0,0,0.65)]">
-						<HugeiconsIcon icon={TransitionTopIcon} className="z-50 size-3.5" />
-						<span className="z-50 text-[0.875rem]">Export</span>
-						<div className="absolute top-0 left-0 z-10 flex size-full items-center justify-center rounded-[0.6rem] bg-linear-to-t from-white/0 to-white/50">
-							<div className="absolute top-[0.08rem] z-50 h-[calc(100%-2px)] w-[calc(100%-2px)] rounded-[0.6rem] bg-linear-270 from-[#2567EC] to-[#37B6F7]"></div>
-						</div>
-					</div>
+					<HugeiconsIcon icon={TransitionTopIcon} className="size-3.5" />
+					<span>Export</span>
 				</button>
 			</PopoverTrigger>
 			{hasProject && <ExportPopover onOpenChange={setIsExportPopoverOpen} />}

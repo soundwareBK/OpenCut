@@ -54,8 +54,14 @@ function getHostApi(): HostVizzyApi | null {
 // Industry-standard PiP defaults. The "safe insets" keep us clear of the
 // editor's known chrome regions so the panel never lands on top of the
 // header, the timeline toolbar, or the timeline tracks at first paint.
+//
+// Top inset is small because Vizzy's unified header lives OUTSIDE the
+// iframe — the iframe's coordinate origin (0,0) already sits below the
+// host header, so we only need a few px of breathing room from the
+// iframe edge. Top-right is reserved for the floating Export button, so
+// "tr" is excluded from the corner snap targets below.
 const SAFE_INSET = {
-	top: 56, // header height + breathing room
+	top: 12,
 	bottom: 200, // timeline toolbar + ~3 visible tracks
 	left: 16,
 	right: 16,
@@ -65,7 +71,11 @@ const DEFAULT_H = 158;
 const MIN_W = 200;
 const SNAP_THRESHOLD = 80; // distance from a corner to trigger snap
 
-type Corner = "tl" | "tr" | "bl" | "br";
+// Top-right is owned by the iframe's Export button (export-button.tsx),
+// so we omit "tr" from the allowed corners. Snap + default always land
+// somewhere that won't fight the Export affordance.
+type Corner = "tl" | "bl" | "br";
+const ALLOWED_CORNERS: Corner[] = ["tl", "bl", "br"];
 
 type PersistedPrefs = {
 	corner: Corner;
@@ -80,17 +90,18 @@ function readPrefs(): PersistedPrefs | null {
 	try {
 		const raw = window.localStorage.getItem(STORAGE_KEY);
 		if (!raw) return null;
-		const parsed = JSON.parse(raw) as PersistedPrefs;
+		const parsed = JSON.parse(raw) as PersistedPrefs & { corner: string };
 		if (
-			(parsed.corner === "tl" ||
-				parsed.corner === "tr" ||
-				parsed.corner === "bl" ||
-				parsed.corner === "br") &&
 			typeof parsed.w === "number" &&
 			typeof parsed.h === "number" &&
 			typeof parsed.hidden === "boolean"
 		) {
-			return parsed;
+			// Migrate any persisted "tr" (no longer allowed — Export owns that
+			// corner now) to "br" so old users don't get a stranded chip.
+			const corner: Corner = ALLOWED_CORNERS.includes(parsed.corner as Corner)
+				? (parsed.corner as Corner)
+				: "br";
+			return { ...parsed, corner };
 		}
 	} catch (_e) {
 		/* ignore */
@@ -115,8 +126,6 @@ function cornerToXY(corner: Corner, w: number, h: number) {
 	switch (corner) {
 		case "tl":
 			return { x: SAFE_INSET.left, y: SAFE_INSET.top };
-		case "tr":
-			return { x: vw - w - SAFE_INSET.right, y: SAFE_INSET.top };
 		case "bl":
 			return { x: SAFE_INSET.left, y: vh - h - SAFE_INSET.bottom };
 		case "br":
@@ -127,9 +136,11 @@ function cornerToXY(corner: Corner, w: number, h: number) {
 function nearestCorner(x: number, y: number, w: number, h: number): Corner {
 	const vw = window.innerWidth;
 	const vh = window.innerHeight;
+	// "tr" omitted on purpose — that real estate belongs to the iframe's
+	// Export button, so a drag that ends near top-right snaps to "tl"
+	// instead, the closest legal target.
 	const corners: Array<{ c: Corner; cx: number; cy: number }> = [
 		{ c: "tl", cx: SAFE_INSET.left, cy: SAFE_INSET.top },
-		{ c: "tr", cx: vw - w - SAFE_INSET.right, cy: SAFE_INSET.top },
 		{ c: "bl", cx: SAFE_INSET.left, cy: vh - h - SAFE_INSET.bottom },
 		{ c: "br", cx: vw - w - SAFE_INSET.right, cy: vh - h - SAFE_INSET.bottom },
 	];
