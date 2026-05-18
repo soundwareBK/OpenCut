@@ -10,7 +10,6 @@ import { AssetsPanel } from "@/components/editor/panels/assets";
 import { PropertiesPanel } from "@/components/editor/panels/properties";
 import { Timeline } from "@/timeline/components";
 import { PreviewPanel } from "@/preview/components";
-import { EditorHeader } from "@/components/editor/editor-header";
 import { EditorProvider } from "@/components/providers/editor-provider";
 import { Onboarding } from "@/components/editor/onboarding";
 import { MigrationDialog } from "@/project/components/migration-dialog";
@@ -38,6 +37,7 @@ import {
 // records discrete beat/drop events for snap-to-beat features.
 import { VizzyBridgeMount } from "@/lib/vizzy/bridge";
 import { VizzySignalIndicator } from "@/lib/vizzy/signal-indicator";
+import { ExportButton } from "@/components/editor/export-button";
 // Auto-importer: pulls in the audio + video clips the user already had
 // loaded in Vizzy's basic mode so flipping into Advanced Mode finds the
 // same project state pre-populated on the timeline panel.
@@ -54,15 +54,31 @@ export default function Editor() {
 	const params = useParams();
 	const projectId = params.project_id as string;
 
+	// Vizzy fork: this bundle is only ever loaded inside Vizzy's iframe and
+	// the host owns the persistent chrome (logo, project name, mode pill,
+	// settings, export). Rendering the OpenCut editor-header here would
+	// stack a duplicate bar on top of Vizzy's, so we leave it out.
+	// The project-rename, export, and exit affordances move to the host
+	// header in Phase D (state bridge); for now, project name is implicit
+	// and exit happens via the mode pill.
 	return (
 		<MobileGate>
 			<VizzyBridgeMount />
 			<EditorProvider projectId={projectId}>
 				<div className="bg-background flex h-screen w-screen flex-col overflow-hidden">
 					<DegradedRendererBanner />
-					<EditorHeader />
 					<div className="min-h-0 min-w-0 flex-1">
 						<EditorLayout />
+					</div>
+					{/* Floating export — the only thing kept from the old editor
+					    header. Host chrome (logo, project name, mode pill,
+					    settings) lives in Vizzy; this stays inside the iframe
+					    so OpenCut's export popover (which depends on editor
+					    state) opens without a postMessage bridge. */}
+					<div className="pointer-events-none absolute top-2 right-3 z-50">
+						<div className="pointer-events-auto">
+							<ExportButton />
+						</div>
 					</div>
 					<Onboarding />
 					<MigrationDialog />

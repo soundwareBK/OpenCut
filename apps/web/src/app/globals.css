@@ -115,6 +115,59 @@
   --ring: hsl(0, 0%, 52%);
 }
 
+/* ============================================================================
+ * Vizzy fork — palette overrides for the embedded editor.
+ *
+ * The bundle is loaded inside Vizzy's iframe in Advanced Mode; outside of
+ * Vizzy it's never run. Re-skin the dark-mode shadcn tokens so the editor
+ * surfaces match Vizzy's near-black + faint-white aesthetic (#0a0a0a base,
+ * rgba(255,255,255,0.08) borders) instead of OpenCut's neutral greys.
+ *
+ * Kept as a trailing :where() block so future upstream merges don't
+ * conflict with the original .dark definitions above — easy to delete
+ * or tune in one place.
+ * ========================================================================== */
+:where(.dark) {
+  --background: hsl(220, 8%, 4%);
+  --foreground: hsl(0, 0%, 95%);
+  --card: hsl(220, 8%, 6%);
+  --card-foreground: hsl(0, 0%, 95%);
+  --popover: hsl(220, 8%, 8%);
+  --popover-hover: hsl(220, 8%, 12%);
+  --popover-foreground: hsl(0, 0%, 96%);
+  --muted: hsl(220, 6%, 16%);
+  --muted-foreground: hsl(0, 0%, 60%);
+  --accent: hsl(220, 6%, 10%);
+  --accent-foreground: hsl(0, 0%, 95%);
+  --border: hsl(220, 8%, 13%);
+  --input: hsl(220, 8%, 8%);
+  --ring: hsl(0, 0%, 60%);
+  /* Sidebar (assets panel column on desktop) follows the same scale. */
+  --sidebar-background: hsl(220, 8%, 5%);
+  --sidebar-foreground: hsl(0, 0%, 95%);
+  --sidebar-accent: hsl(220, 6%, 11%);
+  --sidebar-accent-foreground: hsl(0, 0%, 95%);
+  --sidebar-border: hsl(220, 8%, 13%);
+  --sidebar: hsl(220, 8%, 5%);
+}
+
+/* Subtle scrollbar styling to match Vizzy's understated chrome — the
+   default Webkit scrollbars look loud against the near-black surfaces. */
+:where(.dark) ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+:where(.dark) ::-webkit-scrollbar-track {
+  background: transparent;
+}
+:where(.dark) ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+:where(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
 @layer base {
   /*
     The default border color has changed to `currentcolor` in Tailwind CSS v4,
